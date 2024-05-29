@@ -11,9 +11,9 @@ env.read_env('.env')
 @pytest.mark.asyncio
 async def test_authenticate_success():
     base_url = 'https://cloud.api.selcloud.ru'
-    username = env('USERNAME')
-    account_id = env('PASSWORD')
-    password = env('ACCOUNT_ID')
+    username = env('SELECTEL_USERNAME')
+    account_id = env('SELECTEL_ACCOUNT_ID')
+    password = env('SELECTEL_PASSWORD')
     project_name = 'My First Project'
 
     client = AuthClient(base_url=base_url)
@@ -29,14 +29,15 @@ async def test_authenticate_success():
 @pytest.mark.asyncio
 async def test_get_container_options():
     base_url = 'https://cloud.api.selcloud.ru'
-    username = env('USERNAME')
-    account_id = env('PASSWORD')
-    password = env('ACCOUNT_ID')
+    username = env('SELECTEL_USERNAME')
+    account_id = env('SELECTEL_ACCOUNT_ID')
+    password = env('SELECTEL_PASSWORD')
+    project_name = 'My First Project'
 
     client = AuthClient(base_url=base_url)
     keystone_token = await client.authenticate(
         username=username, account_id=account_id, password=password,
-        project_name='My First Project'
+        project_name=project_name
     )
 
     headers = {

@@ -1,3 +1,3 @@
-from .client import SelectelStorageClient
+from .client import SelectelStorageClient, AuthClient
 
-__all__ = ['SelectelStorageClient']
+__all__ = ['SelectelStorageClient', 'AuthClient']
