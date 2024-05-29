@@ -7,7 +7,9 @@ class SelectelAuthError(SelectelError):
 
 
 class SelectelRequestError(SelectelError):
-    pass
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(f'Error while setting container options: {message}')
 
 
 class AuthError(Exception):

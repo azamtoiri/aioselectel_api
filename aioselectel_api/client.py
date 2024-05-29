@@ -3,8 +3,8 @@ import json
 import aiohttp
 
 from aioselectel_api.config import SELECTEL_STORAGE_BASE_URL
-from .base_client import IClient
-from .exceptions import SelectelRequestError, AuthError
+from aioselectel_api.base_client import IClient
+from aioselectel_api.exceptions import SelectelRequestError, AuthError
 
 
 class AuthClient(IClient):  # pylint: disable=too-few-public-methods
@@ -71,6 +71,13 @@ class SelectelStorageClient:
         await self.session.close()
 
     async def _request(self, method: str, endpoint: str = '', **kwargs):
+        """
+        Do request to Selectel API
+        :param method: PUT, GET, POST, DELETE
+        :param endpoint: options, pubdomains
+        :param kwargs: data, json, headers
+        :return: text or json
+        """
         url = f"{self.base_url}/{endpoint}"
         async with self.session.request(method, url, **kwargs) as response:
             if response.status >= 400:
@@ -79,15 +86,41 @@ class SelectelStorageClient:
                 return await response.json()
             return await response.text()
 
-    async def get_containers_settings(self):
+    async def get_containers_settings(self) -> dict:
         return await self._request('GET', endpoint='options')
 
-    async def get_pubdomains(self):
+    async def get_pubdomains(self) -> dict:
         return await self._request('GET', endpoint='pubdomains')
 
-    async def set_account_metadata(self, metadata: dict):
-        headers = {f'X-Account-Meta-{k}': v for k, v in metadata.items()}
-        return await self._request('POST', headers=headers)
+    async def set_containers_options(self, data: dict) -> bool:
+        """
+        Set metadata for container
+        :param metadata: dict
+        :return: True or false
+        """
+        # payload = {
+        #     "general": {
+        #         "cache_control": "max-age=604800", # 1 week
+        #         "default_delete_after": 3600, # 1 hour
+        #         "type": "private" # public, private
+        #     },
+        #     "quota": {
+        #         "max_bytes_used": 1024, # 1 KB
+        #         "max_object_count": 10, # 10 objects
+        #     },
+        #     "web": {
+        #         "error": "error.html", # error.html
+        #         "expires": "Wed, 21 Oct 2015 07:28:00 GMT", # Wed, 21 Oct 2015 07:28:00 GMT
+        #         "index": "index.html", # index.html
+        #         "listing_css": "style.css", # style.css
+        #         "listing_enabled": True, # true
+        #         "listing_sort_order": "name_asc" # name_asc, name_desc, size_asc, size_desc, time_asc, time_desc
+        #     }
+        # }
+        try:
+            return await self._request('PUT', endpoint='options', data=json.dumps(data))
+        except Exception as e:
+            raise SelectelRequestError(str(e)) from e
 
 
 async def get_token(username: str, password: str, account_id: str, project_name) -> str:
