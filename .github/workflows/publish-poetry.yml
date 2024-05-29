@@ -3,26 +3,26 @@ name: Publish Python Package with poetry
 on: [ push ]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.11'
-
-      - name: Install Poetry
-        run: curl -sSL https://install.python-poetry.org | python3 -
-
-      - name: Configure Poetry
-        run: poetry config virtualenvs.create false
-
-      - name: Install dependencies
-        run: poetry install
+  #  build:
+  #    runs-on: ubuntu-latest
+  #
+  #    steps:
+  #      - name: Check out the repository
+  #        uses: actions/checkout@v2
+  #
+  #      - name: Set up Python
+  #        uses: actions/setup-python@v2
+  #        with:
+  #          python-version: '3.11'
+  #
+  #      - name: Install Poetry
+  #        run: curl -sSL https://install.python-poetry.org | python3 -
+  #
+  #      - name: Configure Poetry
+  #        run: poetry config virtualenvs.create false
+  #
+  #      - name: Install dependencies
+  #        run: poetry install
 
   publish:
     needs: build
