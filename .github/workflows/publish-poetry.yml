@@ -1,6 +1,9 @@
 name: Publish Python Package with poetry
 
-on: [ push ]
+on:
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   #  build:
