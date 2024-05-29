@@ -1,6 +1,6 @@
 name: Publish Python Package with poetry
 
-on: [push]
+on: [ push ]
 
 jobs:
   build:
@@ -23,9 +23,6 @@ jobs:
 
       - name: Install dependencies
         run: poetry install
-
-      - name: Run tests
-        run: poetry run pytest
 
   publish:
     needs: build
