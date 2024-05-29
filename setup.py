@@ -4,6 +4,9 @@ setup(
     name='selectel_async',
     version='0.1.0',
     packages=find_packages(),
+    author="Azam Toiri",
+    author_email="<azamtoiri@gmail.com>",
+    keywords=['selectel', 'async', 'aiohttp'],
     install_requires=[
         'aiohttp',
     ],
