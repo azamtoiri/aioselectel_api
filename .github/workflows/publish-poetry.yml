@@ -1,6 +1,8 @@
-name: Publish Python Package
+name: Publish Python Package with poetry
 
-on: [push]
+on:
+  release:
+    types: [ published ]
 
 jobs:
   build:
