@@ -7,7 +7,7 @@ from aioselectel_api.client import SelectelStorageClient, get_token
 env = Env()
 env.read_env('.env')
 
-base_url = 'https://cloud.api.selcloud.ru'
+BASE_URL = 'https://cloud.api.selcloud.ru'
 username = env('SELECTEL_USERNAME')
 password = env('SELECTEL_PASSWORD')
 account_id = env('SELECTEL_ACCOUNT_ID')

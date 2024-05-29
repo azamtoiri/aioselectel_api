@@ -7,8 +7,9 @@ from .base_client import IClient
 from .exceptions import SelectelRequestError, AuthError
 
 
-class AuthClient(IClient):
+class AuthClient(IClient):  # pylint: disable=too-few-public-methods
     def __init__(self, base_url: str):
+        self.token = None
         self.base_url = base_url
 
     async def authenticate(self, username: str, account_id: str, password: str, project_name: str = None) -> str:
