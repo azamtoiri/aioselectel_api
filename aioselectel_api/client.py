@@ -2,12 +2,11 @@ import json
 
 import aiohttp
 
-from aioselectel_api.config import SELECTEL_STORAGE_BASE_URL
-from aioselectel_api.base_client import IClient
+from aioselectel_api.base_client import IAuthClient, BaseClient
 from aioselectel_api.exceptions import SelectelRequestError, AuthError
 
 
-class AuthClient(IClient):  # pylint: disable=too-few-public-methods
+class AuthClient(IAuthClient):  # pylint: disable=too-few-public-methods
     def __init__(self, base_url: str):
         self.token = None
         self.base_url = base_url
@@ -56,35 +55,10 @@ class AuthClient(IClient):  # pylint: disable=too-few-public-methods
                 return self.token
 
 
-class SelectelStorageClient:
+class SelectelStorageClient(BaseClient):
     def __init__(self, keystone_token: str, container_name: str):
-        self.keystone_token = keystone_token
-        self.container_name = container_name
-        self.base_url = f"{SELECTEL_STORAGE_BASE_URL}/v2/containers/{container_name}"
-        self.session = None
-
-    async def __aenter__(self):
-        self.session = aiohttp.ClientSession(headers={'X-Auth-Token': self.keystone_token})
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb):
-        await self.session.close()
-
-    async def _request(self, method: str, endpoint: str = '', **kwargs):
-        """
-        Do request to Selectel API
-        :param method: PUT, GET, POST, DELETE
-        :param endpoint: options, pubdomains
-        :param kwargs: data, json, headers
-        :return: text or json
-        """
-        url = f"{self.base_url}/{endpoint}"
-        async with self.session.request(method, url, **kwargs) as response:
-            if response.status >= 400:
-                raise SelectelRequestError(await response.text())
-            if response.content_type == 'application/json':
-                return await response.json()
-            return await response.text()
+        super().__init__(keystone_token)
+        self.base_url += f"/v2/containers/{container_name}"
 
     async def get_containers_settings(self) -> dict:
         return await self._request('GET', endpoint='options')
@@ -119,6 +93,114 @@ class SelectelStorageClient:
         # }
         try:
             return await self._request('PUT', endpoint='options', data=json.dumps(data))
+        except Exception as e:
+            raise SelectelRequestError(str(e)) from e
+
+    async def create_logs_task(self, data: dict) -> dict:
+        """
+        Create a log export task
+        param task_type: Type of the log export task
+        param container: Name of the container
+        param delete_after: Time after which logs should be deleted
+        param fields: List of fields to include in the logs
+        param filters: Filters to apply to the logs
+        param provider: Provider of the logs
+        param since: Start time for the logs
+        param till: End time for the logs
+        :param data: dict of parameters
+
+        Example:
+        {
+          "data": {
+            "container": "string",
+            "delete_after": 0,
+            "fields": [
+              "string"
+            ],
+            "filters": {
+              "additionalProp1": {},
+              "additionalProp2": {},
+              "additionalProp3": {}
+            },
+            "provider": "string",
+            "since": "2019-05-14T06:00:00",
+            "till": "2019-05-14T06:00:00"
+          },
+          "type": "string"
+        }
+        """
+
+        try:
+            return await self._request('POST', endpoint='logs', data=json.dumps(data))
+        except Exception as e:
+            raise SelectelRequestError(str(e)) from e
+
+    async def get_logs_task_info(self, task_id: str) -> dict:
+        """
+        Get information about a log export task
+        :param task_id: ID of the log export task
+        :return: task details
+        """
+        try:
+            return await self._request('GET', endpoint=f'logs/{task_id}')
+        except Exception as e:
+            raise SelectelRequestError(str(e)) from e
+
+
+class SelectelLogsClient(BaseClient):
+    def __init__(self, keystone_token: str):
+        super().__init__(keystone_token)
+        self.base_url += "/v2"
+
+    async def create_logs_task(self, data: dict) -> str:
+        """
+        Create a log export task
+        param task_type: Type of the log export task
+        param container: Name of the container
+        param delete_after: Time after which logs should be deleted
+        param fields: List of fields to include in the logs
+        param filters: Filters to apply to the logs
+        param provider: Provider of the logs
+        param since: Start time for the logs
+        param till: End time for the logs
+        :param data: dict of parameters
+        :return Task id
+
+        Example:
+        {
+          "data": {
+            "container": "string",
+            "delete_after": 0,
+            "fields": [
+              "string"
+            ],
+            "filters": {
+              "additionalProp1": {},
+              "additionalProp2": {},
+              "additionalProp3": {}
+            },
+            "provider": "string",
+            "since": "2019-05-14T06:00:00",
+            "till": "2019-05-14T06:00:00"
+          },
+          "type": "string"
+        }
+        """
+
+        try:
+            request_data = await self._request('POST', endpoint='logs', data=json.dumps(data))
+            return request_data.get('task')['id']
+        except Exception as e:
+            raise SelectelRequestError(str(e)) from e
+
+    async def get_logs_task_info(self, task_id: str) -> dict:
+        """
+        Get information about a log export task
+        :param task_id: ID of the log export task
+        :return: task details
+        """
+        try:
+            return await self._request('GET', endpoint=f'logs/{task_id}')
         except Exception as e:
             raise SelectelRequestError(str(e)) from e
 
