@@ -40,13 +40,16 @@ jobs:
         run: poetry run pytest
 
       - name: Create Release Tag
+        id: create_release_tag
         if: success()
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           TAG="v$(poetry version -s)"
           git tag $TAG
-          git push origin $TAG
+          git push https://x-access-token:${{ secrets.TOKEN_GITHUB }}@github.com/${{ github.repository }} $TAG
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
 
       - name: Create GitHub Release
         if: success()
@@ -60,3 +63,4 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+
