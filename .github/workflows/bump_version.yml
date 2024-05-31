@@ -1,0 +1,65 @@
+name: Bump version
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        run: curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Configure Poetry
+        run: poetry config virtualenvs.create false
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Set up .env file
+        run: |
+          echo "SELECTEL_USERNAME=${{ secrets.SELECTEL_USERNAME }}" >> .env
+          echo "SELECTEL_ACCOUNT_ID=${{ secrets.SELECTEL_ACCOUNT_ID }}" >> .env
+          echo "SELECTEL_PASSWORD=${{ secrets.SELECTEL_PASSWORD }}" >> .env
+
+
+      - name: Run tests
+        run: poetry run pytest
+
+  create_tag:
+    needs: test
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: '0'
+
+      - name: Get Version from Poetry
+        id: poetry_version
+        run: echo "::set-output name=version::$(poetry version -s)"
+
+      - name: Bump version and push tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+        run: |
+          git config global --global user.name "github-actions[bot]"
+          git config global --global user.email "github-actions[bot]@users.noreply.github.com"
+          VERSION=$(echo v${{ steps.poetry_version.outputs.version }})
+          git tag $VERSION
+          git push origin $VERSION
