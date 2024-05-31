@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aioselectel-api"
-version = "0.1.2"
+version = "0.1.4"
 description = ""
 authors = ["azamtoiri <azamtoiri@gmail.com>"]
 readme = "README.md"
