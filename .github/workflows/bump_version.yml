@@ -52,7 +52,7 @@ jobs:
 
       - name: Get Version from Poetry
         id: poetry_version
-        run: echo "::set-output name=version::$(poetry version -s)"
+        run: echo "VERSION=$(poetry version -s)" >> $GITHUB_ENV
 
       - name: Bump version and push tag
         env:
@@ -60,6 +60,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          VERSION=$(echo v${{ steps.poetry_version.outputs.version }})
-          git tag $VERSION
-          git push origin $VERSION
+          TAG="v${{ env.VERSION }}"
+          git tag $TAG
+          git push origin $TAG
