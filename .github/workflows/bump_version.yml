@@ -49,27 +49,9 @@ jobs:
           ref: ${{ github.event.pull_request.merge_commit_sha }}
           fetch-depth: '0'
 
-      - name: Get version from Poetry
-        id: poetry_version
-        run: echo "VERSION=$(poetry version -s)" >> $GITHUB_ENV
-
       - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          TAG="v${{ env.VERSION }}"
-          git tag $TAG
-          git push origin $TAG
-
-      - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
-        with:
-          tag_name: "v${{ env.VERSION }}"
-          release_name: "Release v${{ env.VERSION }}"
-          body: "Release of version v${{ env.VERSION }}."
-          draft: false
-          prerelease: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+          PRERELEASE: true
