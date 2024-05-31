@@ -1,4 +1,4 @@
-name: Testing Package and Publish
+name: Test and Create Release
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,42 +31,32 @@ jobs:
         run: poetry install
 
       - name: Set up .env file
-        run: | 
+        run: |
           echo "SELECTEL_USERNAME=${{ secrets.SELECTEL_USERNAME }}" >> .env
           echo "SELECTEL_ACCOUNT_ID=${{ secrets.SELECTEL_ACCOUNT_ID }}" >> .env
           echo "SELECTEL_PASSWORD=${{ secrets.SELECTEL_PASSWORD }}" >> .env
 
-
       - name: Run tests
         run: poetry run pytest
 
-  publish:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      - name: Create Release Tag
+        if: success()
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          TAG="v$(poetry version -s)"
+          git tag $TAG
+          git push origin $TAG
 
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - name: Create GitHub Release
+        if: success()
+        uses: actions/create-release@v1
         with:
-          python-version: '3.8'
-
-      - name: Install Poetry
-        run: curl -sSL https://install.python-poetry.org | python3 -
-
-      - name: Configure Poetry
-        run: poetry config virtualenvs.create false
-
-      - name: Install dependencies
-        run: poetry install
-
-      - name: Build the package
-        run: poetry build
-
-      - name: Publish to PyPI
+          tag_name: ${{ steps.create_release_tag.outputs.TAG }}
+          release_name: Release ${{ steps.create_release_tag.outputs.TAG }}
+          body: |
+            Release of version ${{ steps.create_release_tag.outputs.TAG }}.
+          draft: false
+          prerelease: false
         env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_API_TOKEN }}
-        run: poetry publish --build --username __token__ --password $POETRY_PYPI_TOKEN_PYPI
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
